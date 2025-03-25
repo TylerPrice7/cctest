@@ -24,30 +24,22 @@ jobs:
       - name: Install GitHub CLI
         run: sudo apt-get install gh -y
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Authenticate GitHub CLI
-        run: echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
-
+          github_token: ${{ secrets.GITHUB_TOKEN }}      
       - name: Check for existing releases
         id: check-releases
         run: |
           releases=$(gh release list)
           if [ -z "$releases" ]; then
             gh release create v0.1.0 -t "Initial release" -n "Initial release"
-            echo "NEXT_VERSION=v0.1.0" >> $GITHUB_ENV
-          else
-            echo "Releases found"
           fi
 
       - name: Get next version
-        if: steps.check-releases.outputs.NEXT_VERSION == ''
         uses: MiguelRipoll23/get-next-version@v3.0.0
         id: get-next-version
 
       - name: Find all package.json files and update version
         run: |
-          find . -name 'package.json' -exec npm --prefix {} version --no-git-tag-version ${{ env.NEXT_VERSION || steps.get-next-version.outputs.next-version }} \;
+          find . -name 'package.json' -exec npm --prefix {} version --no-git-tag-version ${{ env.NEXT_VERSION }} \;
         env:
           NEXT_VERSION: ${{ steps.get-next-version.outputs.next-version }}
 
