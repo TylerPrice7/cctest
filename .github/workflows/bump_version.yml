@@ -1,32 +1,50 @@
-bump-version:
-  on:
-    workflow_dispatch:
-  name: Bump version
-  runs-on: ubuntu-latest
-  permissions:
-    contents: write
-    pull-requests: write
+name: Bump version
 
-  steps:
-  - name: Setup node
-    uses: actions/setup-node@v4.0.1
+on:
+  workflow_dispatch:
 
-  - name: Get next version
-    uses: MiguelRipoll23/get-next-version@v3.0.0
-    id: get-next-version
+jobs:
+  bump-version:
+    name: Bump version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
-  - name: Update version
-    run: |
-      npm version --no-git-tag-version ${{ env.NEXT_VERSION }}
-    env:
-      NEXT_VERSION: ${{ steps.get-next-version.outputs.next-version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensure tags are fetched
 
-  - name: Create pull request
-    uses: peter-evans/create-pull-request@v6
-    with:
-      branch: version/${{ steps.get-next-version.outputs.next-version }}
-      commit-message: ${{ steps.get-next-version.outputs.next-version }}
-      title: Bump version to ${{ steps.get-next-version.outputs.next-version }}
-      body: Automated pull request triggered by a new release.
-      labels: new-release,ignore-for-release
-      draft: true
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.0.1
+
+      - name: Get next version
+        uses: MiguelRipoll23/get-next-version@v3.0.0
+        id: get-next-version
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update version
+        run: |
+          npm version --no-git-tag-version ${{ steps.get-next-version.outputs.next-version }}
+
+      - name: Commit version bump
+        run: |
+          git add package.json
+          git commit -m "Bump version to ${{ steps.get-next-version.outputs.next-version }}"
+          git push origin HEAD
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: version/${{ steps.get-next-version.outputs.next-version }}
+          commit-message: Bump version to ${{ steps.get-next-version.outputs.next-version }}
+          title: Bump version to ${{ steps.get-next-version.outputs.next-version }}
+          body: Automated pull request triggered by a new release.
+          labels: new-release,ignore-for-release
+          draft: true
