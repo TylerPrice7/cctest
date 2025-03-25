@@ -1,15 +1,15 @@
-// import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
-// import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 
-// export default async function Home() {
-//   const supabase = await createClient();
+export default async function Home() {
+  const supabase = await createClient();
 
-//   const { data, error } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
 
-//   if (error || !data?.user) {
-//     redirect('/login');
-//   } else {
-//     redirect('/dashboard');
-//   }
-// }
+  if (error || !data?.user) {
+    redirect('/login');
+  } else {
+    redirect('/dashboard');
+  }
+}
