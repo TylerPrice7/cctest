@@ -26,12 +26,6 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Setup node
-        uses: actions/setup-node@v4.0.2
-
       - name: Get next version
         uses: ./
         id: get-next-version
