@@ -21,6 +21,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4.0.1
 
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh -y
+      
+      - name: Check for existing releases
+        id: check-releases
+        run: |
+          releases=$(gh release list)
+          if [ -z "$releases" ]; then
+            gh release create v0.1.0 -t "Initial release" -n "Initial release"
+          fi
+
       - name: Get next version
         uses: MiguelRipoll23/get-next-version@v3.0.0
         id: get-next-version
