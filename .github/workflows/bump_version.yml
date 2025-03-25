@@ -24,7 +24,7 @@ jobs:
       - name: Install GitHub CLI
         run: sudo apt-get install gh -y
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+          GH_TOKEN: ${{ github.token }}      
       - name: Check for existing releases
         id: check-releases
         run: |
