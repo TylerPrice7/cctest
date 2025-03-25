@@ -1,4 +1,6 @@
 bump-version:
+    on:
+      workflow_dispatch:
   name: Bump version
   runs-on: ubuntu-latest
   permissions:
