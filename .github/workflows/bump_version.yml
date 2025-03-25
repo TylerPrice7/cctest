@@ -1,30 +1,56 @@
-bump-version:
-  name: Bump version
-  runs-on: ubuntu-latest
-  permissions:
-    contents: write
-    pull-requests: write
+name: Bump version
 
-  steps:
-  - name: Setup node
-    uses: actions/setup-node@v4.0.1
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        default: stable
+        description: Pick channel
+        options:
+          - alpha
+          - beta
+          - stable
 
-  - name: Get next version
-    uses: MiguelRipoll23/get-next-version@v3.0.0
-    id: get-next-version
+      new-build-for-prerelease:
+        type: boolean
+        default: true
+        description: New build for prerelease
 
-  - name: Update version
-    run: |
-      npm version --no-git-tag-version ${{ env.NEXT_VERSION }}
-    env:
-      NEXT_VERSION: ${{ steps.get-next-version.outputs.next-version }}
+jobs:
+  bump-version:
+    name: Bump version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
-  - name: Create pull request
-    uses: peter-evans/create-pull-request@v6
-    with:
-      branch: version/${{ steps.get-next-version.outputs.next-version }}
-      commit-message: ${{ steps.get-next-version.outputs.next-version }}
-      title: Bump version to ${{ steps.get-next-version.outputs.next-version }}
-      body: Automated pull request triggered by a new release.
-      labels: new-release,ignore-for-release
-      draft: true
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4.0.2
+
+      - name: Get next version
+        uses: ./
+        id: get-next-version
+        with:
+          channel: ${{ inputs.channel }}
+
+      - name: Update version
+        run: |
+          npm version --no-git-tag-version ${{ env.NEXT_VERSION }}
+        env:
+          NEXT_VERSION: ${{ steps.get-next-version.outputs.next-version }}
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: version/${{ steps.get-next-version.outputs.next-version }}
+          commit-message: ${{ steps.get-next-version.outputs.next-version }}
+          title:
+            Bump version to ${{ steps.get-next-version.outputs.next-version }}
+          body: Automated pull request triggered by a new release.
+          labels: new-release,ignore-for-release
+          draft: true
