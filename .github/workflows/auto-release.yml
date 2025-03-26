@@ -1,9 +1,10 @@
 name: Auto Release on Major Version Bump
 
 on:
-  push:
-    branches:
-      - main  # Only runs when pushing to main
+  workflow_run:
+    workflows: ["Version Bump"]  # Waits for "Version Bump" workflow
+    types:
+        - completed  # Ensures "Version Bump" finishes first
 
 jobs:
   release:
@@ -16,49 +17,48 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history to compare tags
+            fetch-depth: 0  # Fetch full history to compare tags
 
-      - name: Get latest tag
+      - name: Get previous tag
         id: previous_tag
         run: |
-          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n 1p || echo "v0.0.0")
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n 2p)
           echo "Previous tag: $PREV_TAG"
-          echo "previous=$PREV_TAG" >> $GITHUB_ENV
+          echo "::set-output name=previous::$PREV_TAG"
 
-      - name: Calculate next version
-        id: next_version
+      - name: Compare major versions
+        id: check_major
         run: |
-          PREV_TAG="${{ env.previous }}"
+          CURRENT_TAG="${{ github.ref_name }}"  # Extract current tag (e.g., v2.0.0)
+          PREV_TAG="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (e.g., v1.2.3)
+
+          # Extract major version numbers
+          CUR_MAJOR=$(echo "$CURRENT_TAG" | cut -d'.' -f1 | tr -d 'v')
           PREV_MAJOR=$(echo "$PREV_TAG" | cut -d'.' -f1 | tr -d 'v')
 
-          # Get current version from package.json
-          CURRENT_TAG="v$(node -p "require('./package.json').version")"
-          CUR_MAJOR=$(echo "$CURRENT_TAG" | cut -d'.' -f1 | tr -d 'v')
-
-          echo "Previous major version: $PREV_MAJOR"
           echo "Current major version: $CUR_MAJOR"
+          echo "Previous major version: $PREV_MAJOR"
 
           if [ "$CUR_MAJOR" -gt "$PREV_MAJOR" ]; then
             echo "Major version increased, proceeding with release."
             echo "release=true" >> $GITHUB_ENV
-            echo "current=$CURRENT_TAG" >> $GITHUB_ENV
           else
             echo "No major version bump, skipping release."
             echo "release=false" >> $GITHUB_ENV
           fi
 
       - name: Generate Changelog
-        if: env.release == 'true'
+        if: ${{ env.release == 'true' }}
         run: |
           echo "## Changes in this release:" > RELEASE_NOTES.md
           git log --oneline $(git describe --tags --abbrev=0 @^)..@ >> RELEASE_NOTES.md
 
       - name: Create GitHub Release
-        if: env.release == 'true'
+        if: ${{ env.release == 'true' }}
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ env.current }}
-          name: "Release ${{ env.current }}"
+          tag: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
           bodyFile: "RELEASE_NOTES.md"
           draft: false
           prerelease: false
