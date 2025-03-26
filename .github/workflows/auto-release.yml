@@ -2,7 +2,7 @@ name: Auto Release on Major Version Bump
 
 on:
   workflow_run:
-    workflows: ["Version Bump"]
+    workflows: [Version Bump]
     types:
       - completed
 
