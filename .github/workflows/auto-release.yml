@@ -46,10 +46,10 @@ jobs:
           PREV_TAG_CLEAN="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (cleaned)
       
           # Remove '-beta' suffix from current tag for comparison
-          CUR_TAG=$(echo "$CURRENT_TAG" | sed 's/-beta$//')
+          #CUR_TAG=$(echo "$CURRENT_TAG" | sed 's/-beta$//')
       
           # Extract major version numbers
-          CUR_MAJOR=$(echo "$CUR_TAG" | cut -d'.' -f1 | tr -d 'v')
+          CUR_MAJOR=$(echo "$CURRENT_TAG" | cut -d'.' -f1 | tr -d 'v')
           PREV_MAJOR=$(echo "$PREV_TAG_CLEAN" | cut -d'.' -f1 | tr -d 'v')
       
           echo "Current major version: $CUR_MAJOR"
