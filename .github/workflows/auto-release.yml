@@ -2,9 +2,9 @@ name: Auto Release on Major Version Bump
 
 on:
   workflow_run:
-    workflows: ["Version Bump"]  # Waits for "Version Bump" workflow
+    workflows: ["Version Bump"]
     types:
-      - completed  # Ensures "Version Bump" finishes first
+      - completed
   push:
     branches:
         - 'main'
@@ -20,32 +20,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history to compare tags
+          fetch-depth: 0
 
       - name: Get previous tag
         id: previous_tag
         run: |
           PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-beta)?$' | sed -n 2p)
-          echo "Previous tag: $PREV_TAG"
-          echo "previous=$PREV_TAG" >> $GITHUB_OUTPUT
 
+          
           if [ -z "$PREV_TAG" ]; then
-            echo "No previous tag found, skipping release."
-            exit 0  # Exit gracefully if no previous tag exists
+          echo "No previous tag found, skipping release."
+          exit 0
           fi
-
-          echo "Previous tag: $PREV_TAG"
-          echo "previous=$PREV_TAG" >> $GITHUB_OUTPUT
+          
+          # Ensure -beta is removed from the previous tag
+          PREV_TAG_CLEAN=$(echo "$PREV_TAG" | sed 's/-beta$//')
+          
+          echo "Previous tag (cleaned): $PREV_TAG_CLEAN"
+          echo "previous=$PREV_TAG_CLEAN" >> $GITHUB_OUTPUT
 
       - name: Compare major versions
         id: check_major
         run: |
-          CURRENT_TAG="${{ github.ref_name }}"  # Extract current tag (e.g., v2.0.0)
-          PREV_TAG="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (e.g., v1.2.3)
+          CURRENT_TAG="${{ github.ref_name }}"  # Extract current tag (e.g., v2.0.0-beta)
+          PREV_TAG_CLEAN="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (cleaned)
+
+          # Remove '-beta' suffix from current tag for comparison
+          CUR_TAG=$(echo "$CURRENT_TAG" | sed 's/-beta$//')
 
           # Extract major version numbers
           CUR_MAJOR=$(echo "$CUR_TAG" | cut -d'.' -f1 | tr -d 'v')
-          PREV_MAJOR=$(echo "$PREV_TAG" | cut -d'.' -f1 | tr -d 'v')
+          PREV_MAJOR=$(echo "$PREV_TAG_CLEAN" | cut -d'.' -f1 | tr -d 'v')
 
           echo "Current major version: $CUR_MAJOR"
           echo "Previous major version: $PREV_MAJOR"
@@ -56,7 +61,6 @@ jobs:
           else
             echo "No major version bump, skipping release."
             echo "release=false" >> $GITHUB_ENV
-          fi
 
       - name: Generate Changelog
         if: ${{ env.release == 'true' }}
