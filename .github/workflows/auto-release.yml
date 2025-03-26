@@ -27,7 +27,7 @@ jobs:
         run: |
           PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n 2p)
           echo "Previous tag: $PREV_TAG"
-          echo "::set-output name=previous::$PREV_TAG"
+          echo "previous=$PREV_TAG" >> $GITHUB_OUTPUT
 
       - name: Compare major versions
         id: check_major
