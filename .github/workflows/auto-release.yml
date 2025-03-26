@@ -61,7 +61,7 @@ jobs:
           else
             echo "No major version bump, skipping release."
             echo "release=false" >> $GITHUB_ENV
-
+          fi
       - name: Generate Changelog
         if: ${{ env.release == 'true' }}
         run: |
