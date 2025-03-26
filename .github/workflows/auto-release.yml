@@ -1,13 +1,9 @@
 name: Auto Release on Major Version Bump
 
 on:
-  workflow_run:
-    workflows: ["Version Bump"]
-    types:
-      - completed
   push:
     branches:
-        - 'main'
+      - main  # Only runs when pushing to main
 
 jobs:
   release:
@@ -20,62 +16,57 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Fetch full history to compare tags
 
-      - name: Get previous tag
+      - name: Get latest tag
         id: previous_tag
         run: |
-          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-beta)?$' | sed -n 2p)
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-beta)?$' | sed -n 1p)
           echo "current=$PREV_TAG" >> $GITHUB_OUTPUT
-          
+
           if [ -z "$PREV_TAG" ]; then
           echo "No previous tag found, skipping release."
           exit 0
           fi
-          
+
           # Ensure -beta is removed from the previous tag
           PREV_TAG_CLEAN=$(echo "$PREV_TAG" | sed 's/-beta$//')
           
           echo "Previous tag (cleaned): $PREV_TAG_CLEAN"
           echo "previous=$PREV_TAG_CLEAN" >> $GITHUB_OUTPUT
-
-      - name: Compare major versions
-        id: check_major
+          
+      - name: Calculate next version
+        id: next_version
         run: |
-
-          CURRENT_TAG="${{ steps.previous_tag.outputs.current }}"  # Extract current tag (e.g., v2.0.0-beta)
           PREV_TAG_CLEAN="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (cleaned)
-
-          # Remove '-beta' suffix from current tag for comparison
-          CUR_TAG=$(echo "$CURRENT_TAG" | sed 's/-beta$//')
-
-          # Extract major version numbers
-          CUR_MAJOR=$(echo "$CUR_TAG" | cut -d'.' -f1 | tr -d 'v')
           PREV_MAJOR=$(echo "$PREV_TAG_CLEAN" | cut -d'.' -f1 | tr -d 'v')
-
-          echo "Current major version: $CUR_MAJOR"
+          
+          # Get current version from package.json
+          CURRENT_TAG="v$(node -p "require('./package.json').version")"
+          CURRENT_TAG_CLEAN=$(echo "$CURRENT_TAG" | sed 's/-beta$//')
+          CUR_MAJOR=$(echo "$CURRENT_TAG_CLEAN" | cut -d'.' -f1 | tr -d 'v')
+          
           echo "Previous major version: $PREV_MAJOR"
-
+          echo "Current major version: $CUR_MAJOR"
           if [ "$CUR_MAJOR" -gt "$PREV_MAJOR" ]; then
             echo "Major version increased, proceeding with release."
             echo "release=true" >> $GITHUB_ENV
+            echo "current=$CURRENT_TAG" >> $GITHUB_ENV
           else
             echo "No major version bump, skipping release."
             echo "release=false" >> $GITHUB_ENV
           fi
-
       - name: Generate Changelog
-        if: ${{ env.release == 'true' }}
+        if: env.release == 'true'
         run: |
           echo "## Changes in this release:" > RELEASE_NOTES.md
           git log --oneline $(git describe --tags --abbrev=0 @^)..@ >> RELEASE_NOTES.md
-
       - name: Create GitHub Release
-        if: ${{ env.release == 'true' }}
+        if: env.release == 'true'
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
+          tag: ${{ env.current }}
+          name: "Release ${{ env.current }}"
           bodyFile: "RELEASE_NOTES.md"
           draft: false
           prerelease: false
