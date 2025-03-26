@@ -42,6 +42,7 @@ jobs:
       - name: Compare major versions
         id: check_major
         run: |
+
           CURRENT_TAG="${{ steps.previous_tag.outputs.current }}"  # Extract current tag (e.g., v2.0.0-beta)
           PREV_TAG_CLEAN="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (cleaned)
 
@@ -62,6 +63,7 @@ jobs:
             echo "No major version bump, skipping release."
             echo "release=false" >> $GITHUB_ENV
           fi
+
       - name: Generate Changelog
         if: ${{ env.release == 'true' }}
         run: |
