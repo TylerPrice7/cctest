@@ -25,7 +25,15 @@ jobs:
       - name: Get previous tag
         id: previous_tag
         run: |
-          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n 2p)
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-beta)?$' | sed -n 2p)
+          echo "Previous tag: $PREV_TAG"
+          echo "previous=$PREV_TAG" >> $GITHUB_OUTPUT
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, skipping release."
+            exit 0  # Exit gracefully if no previous tag exists
+          fi
+
           echo "Previous tag: $PREV_TAG"
           echo "previous=$PREV_TAG" >> $GITHUB_OUTPUT
 
@@ -36,7 +44,7 @@ jobs:
           PREV_TAG="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (e.g., v1.2.3)
 
           # Extract major version numbers
-          CUR_MAJOR=$(echo "$CURRENT_TAG" | cut -d'.' -f1 | tr -d 'v')
+          CUR_MAJOR=$(echo "$CUR_TAG" | cut -d'.' -f1 | tr -d 'v')
           PREV_MAJOR=$(echo "$PREV_TAG" | cut -d'.' -f1 | tr -d 'v')
 
           echo "Current major version: $CUR_MAJOR"
