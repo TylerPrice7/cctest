@@ -21,7 +21,7 @@ jobs:
       - name: Get latest tag
         id: previous_tag
         run: |
-          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-beta)?$' | sed -n 1p)
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-beta)?$' | sed -n 2p)
           echo "current=$PREV_TAG" >> $GITHUB_OUTPUT
 
           if [ -z "$PREV_TAG" ]; then
