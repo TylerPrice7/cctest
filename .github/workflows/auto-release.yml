@@ -44,24 +44,25 @@ jobs:
         run: |
           CURRENT_TAG="${{ github.ref_name }}"  # Extract current tag (e.g., v2.0.0-beta)
           PREV_TAG_CLEAN="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (cleaned)
-
+      
           # Remove '-beta' suffix from current tag for comparison
           CUR_TAG=$(echo "$CURRENT_TAG" | sed 's/-beta$//')
-
+      
           # Extract major version numbers
           CUR_MAJOR=$(echo "$CUR_TAG" | cut -d'.' -f1 | tr -d 'v')
           PREV_MAJOR=$(echo "$PREV_TAG_CLEAN" | cut -d'.' -f1 | tr -d 'v')
-
+      
           echo "Current major version: $CUR_MAJOR"
           echo "Previous major version: $PREV_MAJOR"
-
+      
           if [ "$CUR_MAJOR" -gt "$PREV_MAJOR" ]; then
             echo "Major version increased, proceeding with release."
             echo "release=true" >> $GITHUB_ENV
           else
             echo "No major version bump, skipping release."
             echo "release=false" >> $GITHUB_ENV
-
+          fi
+    
       - name: Generate Changelog
         if: ${{ env.release == 'true' }}
         run: |
