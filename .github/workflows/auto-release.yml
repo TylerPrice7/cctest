@@ -26,7 +26,7 @@ jobs:
         id: previous_tag
         run: |
           PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-beta)?$' | sed -n 2p)
-
+          echo "current=$PREV_TAG" >> $GITHUB_OUTPUT
           
           if [ -z "$PREV_TAG" ]; then
           echo "No previous tag found, skipping release."
@@ -42,7 +42,8 @@ jobs:
       - name: Compare major versions
         id: check_major
         run: |
-          CURRENT_TAG="${{ github.ref_name }}"  # Extract current tag (e.g., v2.0.0-beta)
+
+          CURRENT_TAG="${{ steps.previous_tag.outputs.current }}"  # Extract current tag (e.g., v2.0.0-beta)
           PREV_TAG_CLEAN="${{ steps.previous_tag.outputs.previous }}"  # Extract previous tag (cleaned)
 
           # Remove '-beta' suffix from current tag for comparison
@@ -61,6 +62,7 @@ jobs:
           else
             echo "No major version bump, skipping release."
             echo "release=false" >> $GITHUB_ENV
+          fi
 
       - name: Generate Changelog
         if: ${{ env.release == 'true' }}
