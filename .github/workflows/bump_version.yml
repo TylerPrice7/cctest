@@ -26,6 +26,7 @@ jobs:
           cat package.json
 
       - name: 'Commit and Push Updated package.json to PR branch'
+        if: env.changed == 'true'
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "github-actions@github.com"
