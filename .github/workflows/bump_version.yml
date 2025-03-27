@@ -1,14 +1,12 @@
 name: 'Bump Version'
 
 on:
-  pull_request_review:
-    types: [ submitted ]
-
+  pull_request:
+    branches: [ 'main' ]
 jobs:
   bump-version:
     if: |
-      github.event.review.state == 'approved' &&
-      github.base_ref == 'refs/heads/main'
+      github.event.pull_request.base.ref == 'main'
     name: 'Bump Version'
     runs-on: ubuntu-latest
     permissions:
