@@ -46,5 +46,7 @@ jobs:
           git commit -m "ci: version bump to ${{ steps.version-bump.outputs.newTag }}"
           git push origin main
 
-      - name: 'Output new version'
-        run: echo "New version in main: ${{ steps.version-bump.outputs.newTag }}"
+      - name: 'Output Step'
+        env:
+          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
+        run: echo "new tag $NEW_TAG"
