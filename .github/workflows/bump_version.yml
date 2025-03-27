@@ -1,54 +1,50 @@
-name: Bump version
+name: 'Bump Version in Main'
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  pull_request:
+    types: [closed]  # Run only when the PR is merged
+    branches: [ 'main' ]
 
 jobs:
   bump-version:
-    name: Bump version
+    name: 'Bump Version in Main'
+    if: github.event.pull_request.merged == true  # Only run if the PR was merged
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write  # Required to push changes to main
 
     steps:
-      - name: Checkout branch
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4.0.1
-
-      - name: Install GitHub CLI
-        run: sudo apt-get install gh -y
-
-      - name: Check for existing releases
-        id: check-releases
-        run: |
-          releases=$(gh release list)
-          if [ -z "$releases" ]; then
-            gh release create v0.1.0 -t "Initial release" -n "Initial release"
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - name: Get next version
-        uses: MiguelRipoll23/get-next-version@v3.0.0
-        id: get-next-version
-
-      - name: Find all package.json files and update version
-        run: |
-          find . -name 'package.json' -exec npm --prefix {} version --no-git-tag-version ${{ env.NEXT_VERSION }} \;
-        env:
-          NEXT_VERSION: ${{ steps.get-next-version.outputs.next-version }}
-
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@v6
+      - name: 'Checkout main'
+        uses: actions/checkout@v2
         with:
-          branch: version/${{ steps.get-next-version.outputs.next-version }}
-          commit-message: Bump version to ${{ steps.get-next-version.outputs.next-version }}
-          title: Bump version to ${{ steps.get-next-version.outputs.next-version }}
-          body: Automated pull request triggered by a new release.
-          labels: new-release,ignore-for-release
-          draft: true
+          ref: main  # Ensure we're on the latest main branch
+          fetch-depth: 0  # Fetch full history to avoid issues with versioning
+
+      - name: 'Get latest version from main'
+        run: |
+          git pull origin main
+          echo "Current version in main: $(jq -r '.version' package.json)"
+
+      - name: 'Bump Version'
+        id: version-bump
+        uses: 'phips28/gh-action-bump-version@master'
+        with:
+          major-wording: 'major, breaking, overhaul, revamp'
+          minor-wording: 'minor, add, added, feat, feature, implement, new, introduced'
+          patch-wording: 'fix, bugfix, patch, workaround, secure, security, correct'
+          default: 'patch'
+          tag-prefix: 'v'
+          tag-suffix: '-beta'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 'Push Bumped Version to Main'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+          git add package.json
+          git commit -m "ci: version bump to ${{ steps.version-bump.outputs.newTag }}"
+          git push origin main
+
+      - name: 'Output new version'
+        run: echo "New version in main: ${{ steps.version-bump.outputs.newTag }}"
