@@ -8,17 +8,17 @@ on:
 jobs:
   bump-version:
     name: 'Bump Version in Main'
-    if: github.event.pull_request.merged == true  # Only run if the PR was merged
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to push changes to main
+      contents: write
 
     steps:
       - name: 'Checkout main'
         uses: actions/checkout@v2
         with:
-          ref: main  # Ensure we're on the latest main branch
-          fetch-depth: 0  # Fetch full history to avoid issues with versioning
+          ref: main
+          fetch-depth: 0
 
       - name: 'Get latest version from main'
         run: |
@@ -33,6 +33,7 @@ jobs:
           minor-wording: 'minor, add, added, feat, feature, implement, new, introduced'
           patch-wording: 'fix, bugfix, patch, workaround, secure, security, correct'
           default: 'patch'
+          
           tag-prefix: 'v'
           tag-suffix: '-beta'
         env:
@@ -50,3 +51,9 @@ jobs:
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"
+#      - name: 'cat package.json'
+#        run: cat ./package.json
+#      - name: 'Output Step'
+#        env:
+#          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
+#        run: echo "new tag $NEW_TAG"
