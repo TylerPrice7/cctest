@@ -3,7 +3,9 @@ name: 'Bump Version in Main'
 on:
   pull_request:
     branches: [ 'main' ]
-    types: [closed]
+    types: [closed]  # Runs only when a PR is merged into main
+  push:
+    branches: [ 'main' ]  # Runs when changes are pushed to main
 
 jobs:
   bump-version:
@@ -16,15 +18,23 @@ jobs:
       - name: 'Checkout main'
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.head_ref }}
+          ref: 'main'
           fetch-depth: 0
 
-      - name: 'Fetch latest package.json from main'
+      - name: 'Ensure latest package.json from main'
         run: |
-          git fetch origin main  # Get the latest main branch
-          git checkout origin/main -- package.json  # Copy the latest package.json from main
-          echo "Updated package.json from main:"
+          git fetch origin main
+          git checkout origin/main -- package.json  # Ensure latest version
+          echo "Using package.json from main:"
           cat package.json
+
+      - name: 'Check if running from PR merge'
+        id: check-pr
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "PR merged, will wait for push event."
+            exit 0  # Exit early, let push to main trigger version bump
+          fi
 
       - name: 'Automated Version Bump'
         id: version-bump
@@ -34,19 +44,16 @@ jobs:
           minor-wording: 'minor,added,feat,feature,implement,new,introduced'
           patch-wording: 'fix,bugfix,patch,workaround,secure,security,correct'
           default: 'patch'
-          
+
           tag-prefix: 'v'
           tag-suffix: '-beta'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: 'Output Step'
-        env:
-          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
-        run: echo "new tag $NEW_TAG"
-#      - name: 'cat package.json'
-#        run: cat ./package.json
-#      - name: 'Output Step'
-#        env:
-#          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
-#        run: echo "new tag $NEW_TAG"
+
+      - name: 'Commit and Push Version Bump'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+          git add package.json
+          git commit -m "ci: version bump to ${{ steps.version-bump.outputs.newTag }}"
+          git push origin main  # Push directly to main
