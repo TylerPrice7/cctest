@@ -6,7 +6,7 @@ on:
 jobs:
   bump-version:
     if: |
-      github.base_ref == 'refs/heads/main'
+      github.event.pull_request.base.ref == 'main'
     name: 'Bump Version'
     runs-on: ubuntu-latest
     permissions:
