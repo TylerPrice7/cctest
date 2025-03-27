@@ -38,15 +38,7 @@ jobs:
           tag-suffix: '-beta'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 'Push Bumped Version to Main'
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "github-actions@github.com"
-          git add package.json
-          git commit -m "ci: version bump to ${{ steps.version-bump.outputs.newTag }}"
-          git push origin main
-
+          
       - name: 'Output Step'
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
