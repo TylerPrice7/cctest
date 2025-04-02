@@ -1,4 +1,4 @@
-name: 'Bump Version (SSH Forced)'
+name: 'Bump Version (PAT)'
 
 on:
   push:
@@ -7,37 +7,16 @@ on:
 jobs:
   bump-version:
     runs-on: ubuntu-latest
-    steps:
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.AUTO_VERSION }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
+    permissions:
+      contents: write  # Required for protected branches
 
-      - name: Checkout (SSH)
+    steps:
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ssh-key: ${{ secrets.AUTO_VERSION }}
-
-      - name: Configure Git Globally
-        run: |
-          git config --global url."git@github.com:".insteadOf "https://github.com/"
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          # Force SSH for all operations
-          git config --global core.sshCommand "ssh -i ~/.ssh/id_rsa -F /dev/null"
+          token: ${{ secrets.PROTECTED_BRANCH_TOKEN }}  # PAT from an exempted user
 
       - name: Bump version
-        id: version-bump
         uses: phips28/gh-action-bump-version@master
         env:
-          GITHUB_TOKEN: ""
-          GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa -F /dev/null"
-
-      - name: Verify Remote
-        run: git remote -v
-
-      - name: Push changes
-        run: |
-          git push origin HEAD:main --tags
+          GITHUB_TOKEN: ${{ secrets.PROTECTED_BRANCH_TOKEN }}  # Same PAT
