@@ -47,6 +47,7 @@ jobs:
         run: |
           git remote remove origin || true
           git remote add origin "https://${{ github.actor }}:${{ secrets.AUTO_VERSIONING_SECRET_KEY }}@github.com/${{ github.repository }}.git"
+          git remote set-url origin "https://github.com/${{ github.repository }}.git"
           git remote -v
 
       - name: 'Push changes to repository'
