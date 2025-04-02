@@ -16,7 +16,7 @@ jobs:
       - name: 'Checkout source code'
         uses: 'actions/checkout@v2'
         with:
-          token: ${{secrets.AUTO_VERSIONING_SECRET_KEY}}
+          token: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
           
       - name: 'cat package.json'
         run: cat ./package.json
@@ -38,8 +38,8 @@ jobs:
 
       - name: 'Push changes'
         run: |
-          git config --global user.email "tyler101price@gmail.com"
-          git config --global user.name "Tyler"
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
           git add .
           git commit -m "chore: bump version to ${{ steps.version-bump.outputs.newTag }}"
           git push origin main
