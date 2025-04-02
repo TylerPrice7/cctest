@@ -16,7 +16,7 @@ jobs:
       - name: 'Checkout source code'
         uses: 'actions/checkout@v2'
         with:
-          token: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+          ssh: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
           
       - name: 'cat package.json'
         run: cat ./package.json
