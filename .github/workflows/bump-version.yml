@@ -14,16 +14,19 @@ jobs:
         with:
           ssh-key: ${{ secrets.AUTO_VERSION }}  # Uses SSH instead of PAT
 
+      - name: Configure Git for SSH
+        run: |
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
       - name: Bump version
         id: version-bump
         uses: phips28/gh-action-bump-version@master
         env:
           GITHUB_TOKEN: "" # Still needed for tags?
-        with:
-        # Add these if the action supports them
-          git-name: "GitHub Actions"
-          git-email: "actions@github.com"
-          ssh-key: ${{ secrets.AUTO_VERSION }}
+          GIT_SSH_COMMAND: "ssh -i ${{ github.workspace }}/.ssh/id_rsa"
+
 
       - name: Push changes (SSH)
         run: |
