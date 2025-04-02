@@ -10,7 +10,7 @@ on:
 
 jobs:
   test-backend-bart:
-    name: Test Backend Bart (unittest)
+    name: Test Backend Bert (unittest)
     runs-on: ubuntu-latest
 
     steps:
@@ -22,17 +22,17 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-          cache-dependency-path: python/bart/requirements.txt
+          cache-dependency-path: python/bert/requirements.txt
 
       - name: Initialize environment
         run: |
-          cd python/bart
+          cd python/bert
           chmod +x init.sh
           ./init.sh
 
       - name: Run tests
         run: |
-          cd python/bart/testing
+          cd python/bert/testing
           . .venv/bin/activate
           for file in *.py; do python3 -m unittest "$file" -v; done
 
