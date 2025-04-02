@@ -1,4 +1,4 @@
-name: 'Bump Version'
+name: 'Bump Version (Deploy Key)'
 
 on:
   push:
@@ -7,31 +7,22 @@ on:
 
 jobs:
   bump-version:
-    name: 'Bump Version on master'
     runs-on: ubuntu-latest
-
     steps:
-      - name: 'Checkout source code'
-        uses: 'actions/checkout@v4'
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
-          token: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+          ssh-key: ${{ secrets.AUTO_VERSION }}  # Uses SSH instead of PAT
 
-      - name: 'cat package.json'
-        run: cat ./package.json
-
-      - name: 'Automated Version Bump'
+      - name: Bump version
         id: version-bump
-        uses: 'phips28/gh-action-bump-version@master'
-        with:
-          tag-prefix: 'v'
+        uses: phips28/gh-action-bump-version@master
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Still needed for tags?
 
-      - name: 'cat package.json'
-        run: cat ./package.json
-
-      - name: 'Output Step'
-        env:
-          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
-        run: echo "new tag $NEW_TAG"
+      - name: Push changes (via SSH)
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git remote set-url origin git@github.com:${{ github.repository }}.git
+          git push origin HEAD:master --tags
