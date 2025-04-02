@@ -32,8 +32,9 @@ jobs:
 
       - name: Run tests
         run: |
-          cd python/bert/testing
+          cd python/bert
           . .venv/bin/activate
+          cd python/bert/testing
           for file in *.py; do python3 -m unittest "$file" -v; done
 
   test-backend-svm:
@@ -59,6 +60,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cd python/svm/testing
+          cd python/svm
           . .venv/bin/activate
+          cd python/svn/testing
           for file in *.py; do python3 -m unittest "$file" -v; done
