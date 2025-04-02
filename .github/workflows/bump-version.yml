@@ -15,9 +15,8 @@ jobs:
       - name: 'Checkout source code'
         uses: 'actions/checkout@v2'
         with:
-          ref: ${{ github.ref }}
-          persist-credentials: false
-
+          ssh-key: ${{secrets.AUTO_VERSIONING_SECRET_KEY}}
+          
       - name: 'cat package.json'
         run: cat ./package.json
 
@@ -40,20 +39,3 @@ jobs:
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"
-
-      - name: 'Set Correct Git Remote'
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
-        run: |
-          git remote remove origin || true
-          git remote add origin "https://${{ github.actor }}:${{ secrets.AUTO_VERSIONING_SECRET_KEY }}@github.com/${{ github.repository }}.git"
-          git remote set-url origin "https://github.com/${{ github.repository }}.git"
-          git remote -v
-
-      - name: 'Push changes to repository'
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
-        run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "github-actions"
-          git push origin HEAD --tags
