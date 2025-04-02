@@ -1,8 +1,9 @@
 name: 'Bump Version'
 
 on:
-  pull_request:
-    branches: [ 'main' ]
+  pull_request_review:
+    types:
+      - edited  # Runs when a review is submitted
 jobs:
   bump-version:
     if: |
@@ -33,7 +34,7 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git add package.json
           git commit -m "ci: sync package.json version from main"
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin HEAD:refs/heads/"$HEAD_REF"
 
       - name: 'Checkout source code'
         uses: 'actions/checkout@v2'
