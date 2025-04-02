@@ -19,6 +19,11 @@ jobs:
         uses: phips28/gh-action-bump-version@master
         env:
           GITHUB_TOKEN: "" # Still needed for tags?
+        with:
+        # Add these if the action supports them
+          git-name: "GitHub Actions"
+          git-email: "actions@github.com"
+          ssh-key: ${{ secrets.AUTO_VERSION }}
 
       - name: Push changes (SSH)
         run: |
