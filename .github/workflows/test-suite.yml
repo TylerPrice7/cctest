@@ -25,6 +25,7 @@ jobs:
       - name: Initialize environment
         run: |
           cd python/bert
+          chmod +x init.sh
           ./init.sh
 
       - name: Run tests
@@ -50,6 +51,7 @@ jobs:
       - name: Initialize environment
         run: |
           cd python/svm
+          chmod +x init.sh
           ./init.sh
 
       - name: Run tests
