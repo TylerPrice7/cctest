@@ -16,6 +16,7 @@ jobs:
         uses: 'actions/checkout@v2'
         with:
           ref: ${{ github.ref }}
+          persist-credentials: false
       - name: 'cat package.json'
         run: cat ./package.json
       - name: 'Automated Version Bump'
@@ -26,13 +27,20 @@ jobs:
           minor-wording: 'minor, feat, feature, implement, new, introduced'
           patch-wording: 'fix, bugfix, patch, workaround, secure, security, correct'
           default: 'patch'
-
           tag-prefix: 'v'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
       - name: 'cat package.json'
         run: cat ./package.json
       - name: 'Output Step'
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"
+      - name: 'Push changes to repository'
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+        run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          git remote set-url origin "https://${{ secrets.AUTO_VERSIONING_SECRET_KEY }}:x-oauth-basic@github.com/${{ github.repository }}.git"
+          git push origin --follow-tags
