@@ -40,7 +40,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
         run: |
-          git config --global user.email "you@example.com"
-          git config --global user.name "Your Name"
-          git remote set-url origin "https://${{ secrets.AUTO_VERSIONING_SECRET_KEY }}:x-oauth-basic@github.com/${{ github.repository }}.git"
+          git config --global user.email "tyler101price@gmail.com"
+          git config --global user.name "Tyler"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           git push origin --follow-tags
