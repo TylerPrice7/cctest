@@ -6,7 +6,7 @@ on:
 
 jobs:
   bump-version:
-    name: 'Bump Version on master'
+    name: 'Bump Version on main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -17,8 +17,16 @@ jobs:
         with:
           ref: ${{ github.ref }}
           persist-credentials: false
+
+      - name: 'Setup Git Credentials'
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git remote set-url origin https://x-access-token:${{ secrets.AUTO_VERSIONING_SECRET_KEY }}@github.com/${{ github.repository }}
+
       - name: 'cat package.json'
         run: cat ./package.json
+
       - name: 'Automated Version Bump'
         id: version-bump
         uses: 'phips28/gh-action-bump-version@master'
@@ -27,12 +35,13 @@ jobs:
           minor-wording: 'minor, feat, feature, implement, new, introduced'
           patch-wording: 'fix, bugfix, patch, workaround, secure, security, correct'
           default: 'patch'
-
           tag-prefix: 'v'
         env:
           GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+
       - name: 'cat package.json'
         run: cat ./package.json
+
       - name: 'Output Step'
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
