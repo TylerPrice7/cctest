@@ -6,7 +6,7 @@ on:
 
 jobs:
   bump-version:
-    name: 'Bump Version on master'
+    name: 'Bump Version on main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -17,23 +17,10 @@ jobs:
         with:
           ref: ${{ github.ref }}
           persist-credentials: false
+
       - name: 'cat package.json'
         run: cat ./package.json
-      - name: 'Push changes to repository'
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
-        run: |
-          git config --global user.email "you@example.com"
-          git config --global user.name "Your Name"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          git push origin --follow-tags
-      # - name: 'Set Correct Git Remote'
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
-      #   run: |
-      #     git remote remove origin
-      #     git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-      #     git remote -v
+
       - name: 'Automated Version Bump'
         id: version-bump
         uses: 'phips28/gh-action-bump-version@master'
@@ -45,9 +32,20 @@ jobs:
           tag-prefix: 'v'
         env:
           GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+
       - name: 'cat package.json'
         run: cat ./package.json
+
       - name: 'Output Step'
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"
+
+      - name: 'Push changes to repository'
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git push origin --follow-tags
