@@ -36,6 +36,8 @@ jobs:
         env:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"
+      - name: 'Check Current Git Remote'
+        run: git remote -v
       - name: 'Push changes to repository'
         env:
           GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
