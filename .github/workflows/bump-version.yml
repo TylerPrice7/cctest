@@ -1,37 +1,43 @@
-name: 'Bump Version (Deploy Key)'
+name: 'Bump Version (SSH Forced)'
 
 on:
   push:
-    branches:
-      - 'main'
+    branches: [main]
 
 jobs:
   bump-version:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUTO_VERSION }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Checkout (SSH)
         uses: actions/checkout@v4
         with:
-          ssh-key: ${{ secrets.AUTO_VERSION }}  # Uses SSH instead of PAT
+          ssh-key: ${{ secrets.AUTO_VERSION }}
 
-      - name: Configure Git for SSH
+      - name: Configure Git Globally
         run: |
           git config --global url."git@github.com:".insteadOf "https://github.com/"
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+          # Force SSH for all operations
+          git config --global core.sshCommand "ssh -i ~/.ssh/id_rsa -F /dev/null"
 
       - name: Bump version
         id: version-bump
         uses: phips28/gh-action-bump-version@master
         env:
-          GITHUB_TOKEN: "" # Still needed for tags?
-          GIT_SSH_COMMAND: "ssh -i ${{ github.workspace }}/.ssh/id_rsa"
+          GITHUB_TOKEN: ""
+          GIT_SSH_COMMAND: "ssh -i ~/.ssh/id_rsa -F /dev/null"
 
+      - name: Verify Remote
+        run: git remote -v
 
-      - name: Push changes (SSH)
+      - name: Push changes
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git remote -v  # Debug current remote
-          git remote set-url origin git@github.com:${{ github.repository }}.git
           git push origin HEAD:main --tags
