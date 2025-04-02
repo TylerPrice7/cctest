@@ -5,7 +5,7 @@ import unittest
 import sys
 import os
 
-sys.path.append(os.path.abspath("../age-er"))
+sys.path.append(os.path.abspath(".."))
 
 from age_categorize import categorize_by_age
 
