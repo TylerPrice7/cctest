@@ -41,11 +41,18 @@ jobs:
           NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
         run: echo "new tag $NEW_TAG"
 
+      - name: 'Set Correct Git Remote'
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+        run: |
+          git remote remove origin || true
+          git remote add origin "https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git remote -v
+
       - name: 'Push changes to repository'
         env:
           GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
         run: |
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          git push origin --follow-tags
+          git push origin HEAD --tags
