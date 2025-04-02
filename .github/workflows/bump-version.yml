@@ -2,22 +2,21 @@ name: 'Bump Version'
 
 on:
   push:
-    branches: [ 'main' ]
+    branches:
+      - 'main'
 
 jobs:
   bump-version:
-    name: 'Bump Version on main'
+    name: 'Bump Version on master'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       - name: 'Checkout source code'
-        uses: 'actions/checkout@v2'
+        uses: 'actions/checkout@v4'
         with:
-          ssh: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
-          
+          ref: ${{ github.ref }}
+          token: ${{ secrets.PROTECTED_BRANCH_TOKEN }}
+
       - name: 'cat package.json'
         run: cat ./package.json
 
@@ -25,23 +24,14 @@ jobs:
         id: version-bump
         uses: 'phips28/gh-action-bump-version@master'
         with:
-          major-wording: 'major, breaking, overhaul, revamp'
-          minor-wording: 'minor, feat, feature, implement, new, introduced'
-          patch-wording: 'fix, bugfix, patch, workaround, secure, security, correct'
-          default: 'patch'
           tag-prefix: 'v'
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+          GITHUB_TOKEN: ${{ secrets.PROTECTED_BRANCH_TOKEN }}
 
       - name: 'cat package.json'
         run: cat ./package.json
 
-      - name: 'Push changes'
-        run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git add .
-          git commit -m "chore: bump version to ${{ steps.version-bump.outputs.newTag }}"
-          git push origin main
+      - name: 'Output Step'
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_VERSIONING_SECRET_KEY }}
+          NEW_TAG: ${{ steps.version-bump.outputs.newTag }}
+        run: echo "new tag $NEW_TAG"
